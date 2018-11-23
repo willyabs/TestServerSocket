@@ -1,14 +1,18 @@
 package com.example.willieg.testserversocket;
 
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.net.Socket;
+
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 
@@ -20,11 +24,14 @@ public class MainActivity extends AppCompatActivity {
     private Thread mThread;
     private boolean mKeepRunning = true;
 
+    private TextView mIpView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        mIpView = (TextView) findViewById(R.id.ip_addr);
         setSupportActionBar(toolbar);
     }
 
@@ -55,6 +62,12 @@ public class MainActivity extends AppCompatActivity {
         mThread = new Thread(() -> {
             try {
                 mServerSocket = ServerSocketHelper.createServerSocket(this);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setIpTextOnView();
+                    }
+                });
 
                 while (mKeepRunning) {
                     Socket socket;
@@ -110,5 +123,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         mThread.start();
+    }
+
+    private void setIpTextOnView() {
+        WifiManager wm = (WifiManager) getSystemService(WIFI_SERVICE);
+        String ip = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+        mIpView.setText(ip);
     }
 }
